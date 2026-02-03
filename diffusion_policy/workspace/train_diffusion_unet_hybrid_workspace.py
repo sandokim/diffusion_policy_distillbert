@@ -270,7 +270,7 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
                             B = gt_action.shape[0]
                             texts = [language_instruction] * B
                             language_emb = language_encoder.encode(texts)
-
+                        
                         result = policy.predict_action(obs_dict, language_emb=language_emb)
                         pred_action = result['action_pred']
                         mse = torch.nn.functional.mse_loss(pred_action, gt_action)
