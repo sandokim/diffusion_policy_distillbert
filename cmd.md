@@ -88,27 +88,26 @@ Diffusion Policy: The implementation incorporates action chunking and propriocep
     만으로 “DistilBERT + FiLM 통합된 Diffusion Policy”를 학습 가능
 
 
+# conda activate robodiff
 python train.py \
   --config-dir=. \
   --config-name=image_pusht_diffusion_policy_cnn.yaml \
   training.seed=42 \
-  training.device=cuda:0 \
+  training.device=cuda:1 \
   hydra.run.dir='data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}'
-
 
 python eval.py \
   --checkpoint data/outputs/2026.02.02/19.46.05_train_diffusion_unet_hybrid_pusht_image/checkpoints/latest.ckpt \
   --output_dir data/pusht_eval_output \
   --device cuda:1
 
-  
 # Octo VLA github / https://github.com/octo-models/octo/blob/main/examples/02_finetune_new_observation_action.py
 예시 데이터(tfrecord) 다운 -> https://rail.eecs.berkeley.edu/datasets/example_sim_data.zip
 
 # Diffusion VLA
 예시 데이터(h5df) 다운 -> https://huggingface.co/datasets/lesjie/dexvla_example_data/blob/main/dexvla_example_data.zip
 
-conda activate robodiff
+# conda activate robodiff
 python train.py \
   --config-name=train_diffusion_unet_dexvla_workspace \
   training.device=cuda:1
