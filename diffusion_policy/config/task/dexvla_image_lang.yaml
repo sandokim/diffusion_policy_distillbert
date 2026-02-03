@@ -1,0 +1,31 @@
+name: dexvla_image_lang
+
+shape_meta: &shape_meta
+  # acceptable types: rgb, low_dim
+  obs:
+    image:
+      shape: [3, 480, 640]
+      type: rgb
+    qpos:
+      shape: [14]
+      type: low_dim
+  action:
+    shape: [14]
+
+task_name: &task_name dexvla
+
+env_runner:
+  # dummy runner for offline training (no simulator available)
+  _target_: diffusion_policy.env_runner.offline_image_runner.OfflineImageRunner
+
+dataset:
+  _target_: diffusion_policy.dataset.dexvla_image_language_dataset.DexVLAImageLanguageDataset
+  # 디렉터리 아래의 episode_*.hdf5 를 모두 에피소드로 사용
+  dataset_dir: dexvla_example_data
+  file_pattern: "episode_*.hdf5"
+  horizon: ${horizon}
+  pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
+  pad_after: ${eval:'${n_action_steps}-1'}
+  val_ratio: 0.0
+  seed: 42
+
