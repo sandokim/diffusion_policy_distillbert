@@ -99,7 +99,7 @@ class DexVLAIsaacEnv:
                     return getattr(getattr(asset_cfg, "spawn", None), "usd_path", None)
 
                 print("[DexVLAIsaacEnv] scene assets:")
-                for name in ["table", "peg_block", "peg_tower", "peg_hole"]:
+                for name in ["table", "peg_block"]:
                     asset_cfg = getattr(scene_cfg, name, None)
                     if asset_cfg is None:
                         continue

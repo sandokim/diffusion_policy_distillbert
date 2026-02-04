@@ -33,6 +33,11 @@ COBOTTA_USD_PATH = os.environ.get(
     "COBOTTA_USD_PATH",
     "/home/hyeseong/diffusion_policy/assets/Robots/cobotta_isaac.usd",
 )
+COBOTTA_ROOT_PRIM = os.environ.get(
+    "COBOTTA_ROOT_PRIM",
+    "/base_link",
+)
+COBOTTA_BASE_Z = float(os.environ.get("COBOTTA_BASE_Z", "0.76"))
 
 ZED_X_USD_PATH = os.environ.get(
     "ZED_X_USD_PATH",
@@ -106,16 +111,20 @@ class SceneCfg(InteractiveSceneCfg):
     # two Cobotta robots (bimanual setup)
     robot_left: ArticulationCfg = ArticulationCfg(
         prim_path="/World/envs/env_.*/RobotLeft",
+        articulation_root_prim_path=COBOTTA_ROOT_PRIM,
         spawn=UsdFileCfg(
             usd_path=COBOTTA_USD_PATH,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            articulation_props=sim_utils.ArticulationRootPropertiesCfg(
+                fix_root_link=True,
+            ),
         ),
         init_state=ArticulationCfg.InitialStateCfg(
-            pos=(-0.55, 0.70, 0.76),
+            pos=(-0.55, 0.70, COBOTTA_BASE_Z),
             joint_pos={
                 "joint_1": 0.0,
                 "joint_2": 0.0,
-                "joint_3": 0.0,
+                "joint_3": 1.0,
                 "joint_4": 0.0,
                 "joint_5": 0.0,
                 "joint_6": 0.0,
@@ -140,22 +149,26 @@ class SceneCfg(InteractiveSceneCfg):
                 armature=0.0,
                 effort_limit_sim=20.0,
                 velocity_limit_sim=1.0,
-            ),
+        ),
         },
     )
 
     robot_right: ArticulationCfg = ArticulationCfg(
         prim_path="/World/envs/env_.*/RobotRight",
+        articulation_root_prim_path=COBOTTA_ROOT_PRIM,
         spawn=UsdFileCfg(
             usd_path=COBOTTA_USD_PATH,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            articulation_props=sim_utils.ArticulationRootPropertiesCfg(
+                fix_root_link=True,
+            ),
         ),
         init_state=ArticulationCfg.InitialStateCfg(
-            pos=(0.55, 0.70, 0.76),
+            pos=(0.55, 0.70, COBOTTA_BASE_Z),
             joint_pos={
                 "joint_1": 0.0,
                 "joint_2": 0.0,
-                "joint_3": 0.0,
+                "joint_3": 1.0, # joint_3 limits [0.314, 2.443]
                 "joint_4": 0.0,
                 "joint_5": 0.0,
                 "joint_6": 0.0,
@@ -180,7 +193,7 @@ class SceneCfg(InteractiveSceneCfg):
                 armature=0.0,
                 effort_limit_sim=20.0,
                 velocity_limit_sim=1.0,
-            ),
+        ),
         },
     )
 

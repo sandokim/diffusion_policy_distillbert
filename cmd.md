@@ -174,5 +174,37 @@ python IsaacLab/scripts/tools/record_demos.py \
   --enable_cameras
 
 
+## DexVLA (학습/평가/데모) 핵심 파일 정리
+
+# 학습 (Diffusion Policy)
+# - 학습 스크립트/워크스페이스
+#   diffusion_policy/workspace/train_diffusion_unet_dexvla_workspace.py
+# - 학습 설정
+#   diffusion_policy/config/train_diffusion_unet_dexvla_workspace.yaml
+# - 데이터셋 로더 (HDF5 action_key 포함)
+#   diffusion_policy/dataset/dexvla_image_language_dataset.py
+# - 정책/모델
+#   diffusion_policy/policy/diffusion_unet_hybrid_image_policy.py
+
+# 평가 (IsaacSim)
+# - 평가 엔트리
+#   eval_dexvla_isaac.py
+# - 환경 래퍼/어댑터/로깅
+#   diffusion_policy/isaacsim_env/dexvla_isaac_env.py
+# - 러너 (rollout/영상 저장)
+#   diffusion_policy/env_runner/dexvla_isaac_runner.py
+# - IsaacLab 태스크/MDP
+#   IsaacLab/source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/deploy/dexvla/dexvla_env_cfg.py
+#   IsaacLab/source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/deploy/dexvla/mdp.py
+
+# 데모 수집 (IsaacLab teleop)
+# - 데모 수집 스크립트
+#   IsaacLab/scripts/tools/record_demos.py
+# - teleop용 bimanual IK 환경
+#   IsaacLab/source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/reach/config/franka/bimanual_ik_rel_env_cfg.py
+# - Gym 등록
+#   IsaacLab/source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/reach/config/franka/__init__.py
+
+
 # isaacsim 5.1.0
 # isaaclab 0.47.6
