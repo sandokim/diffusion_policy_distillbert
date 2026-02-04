@@ -54,8 +54,19 @@ class DexVLAIsaacEnv:
         """
         if isaaclab_source is not None:
             isaaclab_source = os.path.expanduser(isaaclab_source)
-            if isaaclab_source not in sys.path:
-                sys.path.insert(0, isaaclab_source)
+            # Ensure the provided IsaacLab source takes priority over any existing ones.
+            sys.path = [p for p in sys.path if "IsaacLab/source" not in p]
+            # Add IsaacLab extensions explicitly so imports work without /home/hyeseong/IsaacLab
+            candidate_paths = [
+                isaaclab_source,
+                os.path.join(isaaclab_source, "isaaclab"),
+                os.path.join(isaaclab_source, "isaaclab_tasks"),
+                os.path.join(isaaclab_source, "isaaclab_assets"),
+            ]
+            for p in reversed(candidate_paths):
+                if p not in sys.path:
+                    sys.path.insert(0, p)
+            print(f"[DexVLAIsaacEnv] isaaclab_source: {isaaclab_source}")
 
         # Lazy import to avoid hard dependency in non-Isaac environments.
         # IMPORTANT: AppLauncher must be instantiated before importing other Isaac modules.
@@ -75,6 +86,26 @@ class DexVLAIsaacEnv:
 
         # Resolve task cfg class
         task_cfg_class = _import_by_path(task_cfg_class_path)
+        try:
+            import inspect
+
+            print(f"[DexVLAIsaacEnv] task_cfg_class file: {inspect.getfile(task_cfg_class)}")
+        except Exception:
+            pass
+        try:
+            scene_cfg = getattr(task_cfg, "scene", None)
+            if scene_cfg is not None:
+                def _usd_path(asset_cfg):
+                    return getattr(getattr(asset_cfg, "spawn", None), "usd_path", None)
+
+                print("[DexVLAIsaacEnv] scene assets:")
+                for name in ["table", "peg_block", "peg_tower", "peg_hole"]:
+                    asset_cfg = getattr(scene_cfg, name, None)
+                    if asset_cfg is None:
+                        continue
+                    print(f"  - {name}: {_usd_path(asset_cfg)}")
+        except Exception:
+            pass
         task_cfg = task_cfg_class()
 
         # For evaluation, set single-env by default if provided

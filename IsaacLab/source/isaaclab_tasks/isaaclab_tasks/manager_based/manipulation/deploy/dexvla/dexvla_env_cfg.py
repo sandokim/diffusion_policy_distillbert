@@ -16,10 +16,24 @@ from isaaclab.sensors import CameraCfg
 from isaaclab.sim.spawners.from_files.from_files_cfg import GroundPlaneCfg, UsdFileCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR
+from isaaclab_assets import ISAACLAB_ASSETS_DATA_DIR
 
 import isaaclab.envs.mdp as base_mdp
-from isaaclab.envs.mdp.actions.actions_cfg import JointPositionActionCfg
-from isaaclab_assets.robots.franka import FRANKA_PANDA_CFG
+from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
+from isaaclab.envs.mdp.actions.actions_cfg import (
+    BinaryJointPositionActionCfg,
+    DifferentialInverseKinematicsActionCfg,
+)
+LOCAL_PROPS_DIR = os.environ.get(
+    "LOCAL_PROPS_DIR",
+    "/home/hyeseong/diffusion_policy/assets/Props",
+)
+
+COBOTTA_USD_PATH = os.environ.get(
+    "COBOTTA_USD_PATH",
+    "/home/hyeseong/diffusion_policy/assets/Robots/cobotta_isaac.usd",
+)
+
 ZED_X_USD_PATH = os.environ.get(
     "ZED_X_USD_PATH",
     "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/Sensors/Stereolabs/ZED_X/ZED_X.usdc",
@@ -65,61 +79,109 @@ class SceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=3000.0),
     )
 
-    # table
+    # table (local asset)
     table = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/Table",
         init_state=AssetBaseCfg.InitialStateCfg(pos=[0.0, 0.55, 0.0], rot=[1.0, 0.0, 0.0, 0.0]),
         spawn=UsdFileCfg(
-            usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Mimic/nut_pour_task/nut_pour_assets/table.usd",
-            scale=(1.0, 1.0, 1.3),
+            usd_path=f"{LOCAL_PROPS_DIR}/table.usd",
+            scale=(1.0, 1.0, 1.0),
         ),
     )
 
-    # placeholder object for "rice cooker"
-    rice_cooker = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/RiceCooker",
+    # block (peg block)
+    peg_block = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/PegBlock",
         init_state=RigidObjectCfg.InitialStateCfg(pos=[0.10, 0.50, 0.98], rot=[1, 0, 0, 0]),
         spawn=UsdFileCfg(
-            usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Mimic/nut_pour_task/nut_pour_assets/sorting_bowl_yellow.usd",
-            scale=(1.0, 1.0, 1.5),
+            usd_path=f"{LOCAL_PROPS_DIR}/block.usd",
+            scale=(0.05, 0.05, 0.05),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.005),
         ),
     )
 
-    # two Franka robots (bimanual setup)
-    robot_left: ArticulationCfg = FRANKA_PANDA_CFG.replace(
+    # pegboard placeholder can be added later
+
+    # two Cobotta robots (bimanual setup)
+    robot_left: ArticulationCfg = ArticulationCfg(
         prim_path="/World/envs/env_.*/RobotLeft",
+        spawn=UsdFileCfg(
+            usd_path=COBOTTA_USD_PATH,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+        ),
         init_state=ArticulationCfg.InitialStateCfg(
             pos=(-0.55, 0.70, 0.76),
             joint_pos={
-                "panda_joint1": 0.0,
-                "panda_joint2": -0.569,
-                "panda_joint3": 0.0,
-                "panda_joint4": -2.810,
-                "panda_joint5": 0.0,
-                "panda_joint6": 3.037,
-                "panda_joint7": 0.741,
-                "panda_finger_joint.*": 0.04,
+                "joint_1": 0.0,
+                "joint_2": 0.0,
+                "joint_3": 0.0,
+                "joint_4": 0.0,
+                "joint_5": 0.0,
+                "joint_6": 0.0,
+                "joint_gripper": 0.0,
             },
         ),
+        actuators={
+            "arm": ImplicitActuatorCfg(
+                joint_names_expr=["joint_[1-6]"],
+                stiffness=400.0,
+                damping=80.0,
+                friction=0.0,
+                armature=0.0,
+                effort_limit_sim=100.0,
+                velocity_limit_sim=10.0,
+            ),
+            "gripper": ImplicitActuatorCfg(
+                joint_names_expr=["joint_gripper"],
+                stiffness=200.0,
+                damping=40.0,
+                friction=0.0,
+                armature=0.0,
+                effort_limit_sim=20.0,
+                velocity_limit_sim=1.0,
+            ),
+        },
     )
 
-    robot_right: ArticulationCfg = FRANKA_PANDA_CFG.replace(
+    robot_right: ArticulationCfg = ArticulationCfg(
         prim_path="/World/envs/env_.*/RobotRight",
+        spawn=UsdFileCfg(
+            usd_path=COBOTTA_USD_PATH,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+        ),
         init_state=ArticulationCfg.InitialStateCfg(
             pos=(0.55, 0.70, 0.76),
             joint_pos={
-                "panda_joint1": 0.0,
-                "panda_joint2": -0.569,
-                "panda_joint3": 0.0,
-                "panda_joint4": -2.810,
-                "panda_joint5": 0.0,
-                "panda_joint6": 3.037,
-                "panda_joint7": 0.741,
-                "panda_finger_joint.*": 0.04,
+                "joint_1": 0.0,
+                "joint_2": 0.0,
+                "joint_3": 0.0,
+                "joint_4": 0.0,
+                "joint_5": 0.0,
+                "joint_6": 0.0,
+                "joint_gripper": 0.0,
             },
         ),
+        actuators={
+            "arm": ImplicitActuatorCfg(
+                joint_names_expr=["joint_[1-6]"],
+                stiffness=400.0,
+                damping=80.0,
+                friction=0.0,
+                armature=0.0,
+                effort_limit_sim=100.0,
+                velocity_limit_sim=10.0,
+            ),
+            "gripper": ImplicitActuatorCfg(
+                joint_names_expr=["joint_gripper"],
+                stiffness=200.0,
+                damping=40.0,
+                friction=0.0,
+                armature=0.0,
+                effort_limit_sim=20.0,
+                velocity_limit_sim=1.0,
+            ),
+        },
     )
 
     # ZED_X camera USD (spawn as asset, then attach sensor to camera prim)
@@ -157,6 +219,8 @@ class ActionsCfg:
 
     left_arm_action: ActionTerm = MISSING
     right_arm_action: ActionTerm = MISSING
+    left_gripper_action: ActionTerm = MISSING
+    right_gripper_action: ActionTerm = MISSING
 
 
 @configclass
@@ -172,13 +236,13 @@ class ObservationsCfg:
                 "asset_cfg": SceneEntityCfg(
                     "robot_left",
                     joint_names=[
-                        "panda_joint1",
-                        "panda_joint2",
-                        "panda_joint3",
-                        "panda_joint4",
-                        "panda_joint5",
-                        "panda_joint6",
-                        "panda_joint7",
+                        "joint_1",
+                        "joint_2",
+                        "joint_3",
+                        "joint_4",
+                        "joint_5",
+                        "joint_6",
+                        "joint_gripper",
                     ],
                 )
             },
@@ -190,13 +254,13 @@ class ObservationsCfg:
                 "asset_cfg": SceneEntityCfg(
                     "robot_right",
                     joint_names=[
-                        "panda_joint1",
-                        "panda_joint2",
-                        "panda_joint3",
-                        "panda_joint4",
-                        "panda_joint5",
-                        "panda_joint6",
-                        "panda_joint7",
+                        "joint_1",
+                        "joint_2",
+                        "joint_3",
+                        "joint_4",
+                        "joint_5",
+                        "joint_6",
+                        "joint_gripper",
                     ],
                 )
             },
@@ -223,7 +287,7 @@ class TerminationsCfg:
     """Termination terms for the MDP."""
 
     time_out = DoneTerm(func=base_mdp.time_out, time_out=True)
-    success = DoneTerm(func=mdp.task_done_cook_rice)
+    success = DoneTerm(func=mdp.task_done_peg_block)
 
 
 @configclass
@@ -248,7 +312,7 @@ class EventsCfg:
                 "yaw": (-0.5, 0.5),
             },
             "velocity_range": {},
-            "asset_cfg": SceneEntityCfg("rice_cooker"),
+            "asset_cfg": SceneEntityCfg("peg_block"),
         },
     )
 
@@ -273,7 +337,7 @@ class CurriculumCfg:
 
 @configclass
 class DexVLAEnvCfg(ManagerBasedRLEnvCfg):
-    """Minimal DexVLA env for evaluation (bimanual GR1T2 + cam_high)."""
+    """Minimal DexVLA env for evaluation (bimanual Franka + cam_high)."""
 
     scene: SceneCfg = SceneCfg(num_envs=1, env_spacing=2.5, replicate_physics=True)
     observations: ObservationsCfg = ObservationsCfg()
@@ -293,34 +357,32 @@ class DexVLAEnvCfg(ManagerBasedRLEnvCfg):
         self.sim.dt = 1 / 100
         self.sim.render_interval = 2
 
-        # actions: joint position for bimanual franka arms (14-dim total)
-        self.actions.left_arm_action = JointPositionActionCfg(
+        # actions: IK (6DoF) + gripper (1DoF) per arm => 14-dim total
+        self.actions.left_arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot_left",
-            joint_names=[
-                "panda_joint1",
-                "panda_joint2",
-                "panda_joint3",
-                "panda_joint4",
-                "panda_joint5",
-                "panda_joint6",
-                "panda_joint7",
-            ],
-            scale=1.0,
-            use_default_offset=True,
-            preserve_order=True,
+            joint_names=["joint_[1-6]"],
+            body_name="gripper_base",
+            controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),
+            scale=0.5,
+            body_offset=DifferentialInverseKinematicsActionCfg.OffsetCfg(pos=[0.0, 0.0, 0.0]),
         )
-        self.actions.right_arm_action = JointPositionActionCfg(
+        self.actions.right_arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot_right",
-            joint_names=[
-                "panda_joint1",
-                "panda_joint2",
-                "panda_joint3",
-                "panda_joint4",
-                "panda_joint5",
-                "panda_joint6",
-                "panda_joint7",
-            ],
-            scale=1.0,
-            use_default_offset=True,
-            preserve_order=True,
+            joint_names=["joint_[1-6]"],
+            body_name="gripper_base",
+            controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),
+            scale=0.5,
+            body_offset=DifferentialInverseKinematicsActionCfg.OffsetCfg(pos=[0.0, 0.0, 0.0]),
+        )
+        self.actions.left_gripper_action = BinaryJointPositionActionCfg(
+            asset_name="robot_left",
+            joint_names=["joint_gripper"],
+            open_command_expr={"joint_gripper": 0.04},
+            close_command_expr={"joint_gripper": 0.0},
+        )
+        self.actions.right_gripper_action = BinaryJointPositionActionCfg(
+            asset_name="robot_right",
+            joint_names=["joint_gripper"],
+            open_command_expr={"joint_gripper": 0.04},
+            close_command_expr={"joint_gripper": 0.0},
         )

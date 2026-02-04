@@ -88,7 +88,6 @@ Diffusion Policy: The implementation incorporates action chunking and propriocep
     만으로 “DistilBERT + FiLM 통합된 Diffusion Policy”를 학습 가능
 
 
-# conda activate robodiff
 python train.py \
   --config-dir=. \
   --config-name=image_pusht_diffusion_policy_cnn.yaml \
@@ -96,18 +95,21 @@ python train.py \
   training.device=cuda:1 \
   hydra.run.dir='data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}'
 
+
 python eval.py \
   --checkpoint data/outputs/2026.02.02/19.46.05_train_diffusion_unet_hybrid_pusht_image/checkpoints/latest.ckpt \
   --output_dir data/pusht_eval_output \
   --device cuda:1
 
+  
 # Octo VLA github / https://github.com/octo-models/octo/blob/main/examples/02_finetune_new_observation_action.py
 예시 데이터(tfrecord) 다운 -> https://rail.eecs.berkeley.edu/datasets/example_sim_data.zip
 
 # Diffusion VLA
 예시 데이터(h5df) 다운 -> https://huggingface.co/datasets/lesjie/dexvla_example_data/blob/main/dexvla_example_data.zip
 
-# conda activate robodiff
+conda activate robodiff
+# IK + gripper 액션(14D) 데모로 재학습 필요 (record_demos로 수집한 hdf5)
 python train.py \
   --config-name=train_diffusion_unet_dexvla_workspace \
   training.device=cuda:1
@@ -127,11 +129,12 @@ conda install -y -c conda-forge libstdcxx-ng
 python eval_dexvla_isaac.py \
   --checkpoint data/outputs/2026.02.03/16.47.06_train_diffusion_unet_dexvla_dexvla_image_lang/checkpoints/latest.ckpt \
   --task_cfg_class isaaclab_tasks.manager_based.manipulation.deploy.dexvla.dexvla_env_cfg.DexVLAEnvCfg \
-  --isaaclab_source IsaacLab/source \
+  --isaaclab_source /home/hyeseong/diffusion_policy/IsaacLab/source \
   --device cuda:0 \
   --output_dir data/isaac_eval_dexvla \
   --n_episodes 20 \
   --max_steps 20 \
+  --enable_cameras \
   --substep_dir /home/hyeseong/diffusion_policy/dexvla_example_data \
   --substep_pattern "episode_*.hdf5"
 
@@ -162,4 +165,14 @@ python eval_dexvla_isaac.py \
 
 
 
+# IsaacLab Bimanual Franka Demo 수집
+python IsaacLab/scripts/tools/record_demos.py \
+  --task Isaac-Reach-Bimanual-Frank-IK-Rel-v0 \
+  --teleop_device keyboard \
+  --dataset_file ./datasets/dataset_skillgen.hdf5 \
+  --num_demos 10 \
+  --enable_cameras
 
+
+# isaacsim 5.1.0
+# isaaclab 0.47.6

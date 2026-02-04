@@ -11,6 +11,7 @@ shape_meta: &shape_meta
       type: low_dim
   action:
     shape: [14]
+    # semantics: (IK 6D + gripper 1D) per arm or joint 7D per arm
 
 task_name: &task_name dexvla
 
@@ -23,6 +24,7 @@ dataset:
   # 디렉터리 아래의 episode_*.hdf5 를 모두 에피소드로 사용
   dataset_dir: dexvla_example_data
   file_pattern: "episode_*.hdf5"
+  action_key: action
   horizon: ${horizon}
   pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
   pad_after: ${eval:'${n_action_steps}-1'}

@@ -25,7 +25,7 @@ class DexVLAMultiEpisodeImageLanguageDataset(BaseImageDataset):
     /home/hyeseong/diffusion_policy/dexvla_example_data/episode_47.hdf5
 
     Expected structure per episode file:
-        action:              (T, 14)
+        action:              (T, 14)  # IK(6)+gripper(1) per arm or joint(7) per arm
         base_action:         (T, 2)          # currently unused
         language_raw:        (1,)            # e.g. "Cook rice."
         observations/effort: (T, 14)
@@ -46,6 +46,7 @@ class DexVLAMultiEpisodeImageLanguageDataset(BaseImageDataset):
         dataset_path: Optional[str] = None,
         dataset_dir: Optional[str] = None,
         file_pattern: str = "episode_*.hdf5",
+        action_key: str = "action",
         horizon: int = 16,
         pad_before: int = 0,
         pad_after: int = 0,
@@ -76,7 +77,9 @@ class DexVLAMultiEpisodeImageLanguageDataset(BaseImageDataset):
         for ep_path in episode_paths:
             with h5py.File(ep_path, "r") as f:
                 # time dimension
-                actions = f["action"][:].astype(np.float32)  # (T, 14)
+                if action_key not in f:
+                    raise KeyError(f"Missing action dataset '{action_key}' in {ep_path}")
+                actions = f[action_key][:].astype(np.float32)  # (T, 14)
                 cam_high = f["observations"]["images"]["cam_high"][:]  # (T, H, W, 3), uint8
                 qpos = f["observations"]["qpos"][:].astype(np.float32)  # (T, 14)
 
